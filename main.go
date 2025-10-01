@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
-	zerolog "github.com/rs/zerolog/log"
 	"go-gin-boilerplate/config"
-	"go-gin-boilerplate/logger"
-	"go-gin-boilerplate/server"
+	"go-gin-boilerplate/internal/handler"
+	"go-gin-boilerplate/pkg/logger"
 	"log"
+
+	"github.com/gin-gonic/gin"
+	zerolog "github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -18,13 +20,27 @@ func main() {
 		log.Fatalf("Could not load config: %v\n", err)
 	}
 
-	if err = config.Initialize(conf); err != nil {
+	if err := config.DatabaseInitialize(conf); err != nil {
 		log.Fatalf("Could not initialize DB: %v\n", err)
 	}
 
 	logger.Initialize(conf.Env())
 
-	router := server.NewEngine(conf)
+	router := gin.New()
+
+	if conf.Env() == config.Development {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	router.Use(gin.Recovery())
+	router.Use(logger.ZerologMiddleware())
+
+	handler.NewMonitorHandler(router)
+	handler.NewUserHandler(router)
+	handler.NewPostHandler(router)
+
 	if err = router.Run(conf.Port()); err != nil {
 		zerolog.Fatal().Err(err).Msg("failed to start server.")
 	}

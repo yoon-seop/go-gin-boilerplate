@@ -2,20 +2,22 @@ package config
 
 import (
 	"fmt"
-	"go-gin-boilerplate/app/user"
+	"go-gin-boilerplate/internal/app/post"
+	"go-gin-boilerplate/internal/app/user"
+	"log"
+	"os"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
-	"os"
 )
 
 var DB *gorm.DB
 
-func Initialize(conf *AppConfig) error {
+func DatabaseInitialize(conf *AppConfig) error {
 	var logLevel logger.LogLevel
 	switch conf.Env() {
-	case "development", "staging":
+	case Development, Staging:
 		logLevel = logger.Info
 	default:
 		logLevel = logger.Error
@@ -46,15 +48,17 @@ func Initialize(conf *AppConfig) error {
 		return err
 	}
 
-	//if err = db.AutoMigrate(
-	//	&entity.User{},
-	//); err != nil {
-	//	log.Fatalf("DB AutoMigrate failed: %v", err)
-	//}
+	// if err = db.AutoMigrate(
+	// 	&entity.User{},
+	// 	&entity.Post{},
+	// ); err != nil {
+	// 	log.Fatalf("DB AutoMigrate failed: %v", err)
+	// }
+
+	user.InitRepository(db)
+	post.InitRepository(db)
 
 	DB = db
-
-	user.RepositoryInitialize(DB)
 
 	return nil
 }

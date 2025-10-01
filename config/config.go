@@ -2,13 +2,18 @@ package config
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 const (
 	configDir       = "config"
 	configExtension = "yaml"
+
+	Development = "development"
+	Staging     = "staging"
+	Production  = "production"
 )
 
 type DBConfig struct {
